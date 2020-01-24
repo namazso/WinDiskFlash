@@ -83,7 +83,7 @@ static BOOL SetDlgItemTextFromResourceString(HWND dlg, int id, UINT str)
   return false;
 }
 
-static void SaveDialog(HWND hWnd, HWND hEdit)
+static void OpenSaveDialog(HWND hWnd, HWND hEdit, bool save)
 {
   // we have to make a huge buffer since GetOpenFileName will fail with throwing away the path if buffer too small
   wchar_t name[MAXWORD / 2];
@@ -93,7 +93,7 @@ static void SaveDialog(HWND hWnd, HWND hEdit)
   of.lpstrFile = name;
   of.nMaxFile = (DWORD)std::size(name);
   of.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT;
-  if (!GetOpenFileName(&of))
+  if (!(save ? GetSaveFileName(&of) : GetOpenFileName(&of)))
   {
     const auto error = CommDlgExtendedError();
     // if error is 0 the user just cancelled the action
@@ -178,6 +178,8 @@ void MainDialog::StartOperation()
   Operation op;
   if (Button_GetCheck(GetCtl(IDC_OPERATION_RAW)))
     op = Operation::Flash;
+  else if (Button_GetCheck(GetCtl(IDC_OPERATION_SAVE)))
+    op = Operation::Save;
   else if (Button_GetCheck(GetCtl(IDC_OPERATION_TRASH)))
     op = Operation::Trash;
   else
@@ -210,22 +212,33 @@ void MainDialog::StartOperation()
   }
 
   auto file_handle = INVALID_HANDLE_VALUE;
-  if(op == Operation::Flash)
+  if(op == Operation::Flash || op == Operation::Save)
   {
     const auto file_path = GetWindowTextStr(GetCtl(IDC_FILE));
 
     if (file_path.empty())
       return;
 
-    file_handle = CreateFile(
-      file_path.c_str(),
-      FILE_GENERIC_READ,
-      0,
-      nullptr,
-      OPEN_EXISTING,
-      0,
-      nullptr
-    );
+    if(op == Operation::Save)
+      file_handle = CreateFile(
+        file_path.c_str(),
+        FILE_GENERIC_WRITE,
+        0,
+        nullptr,
+        CREATE_ALWAYS,
+        0,
+        nullptr
+      );
+    else
+      file_handle = CreateFile(
+        file_path.c_str(),
+        FILE_GENERIC_READ,
+        0,
+        nullptr,
+        OPEN_EXISTING,
+        0,
+        nullptr
+      );
 
     if(file_handle == INVALID_HANDLE_VALUE)
     {
@@ -247,7 +260,7 @@ void MainDialog::StartOperation()
   {
     const auto volume_handle = CreateFile(
         volume_path.c_str(),
-        GENERIC_WRITE,
+        op == Operation::Save ? GENERIC_READ : GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
         nullptr,
         OPEN_EXISTING,
@@ -309,7 +322,7 @@ void MainDialog::StartOperation()
       {
         const auto disk_handle = CreateFile(
           disk->stable_path.c_str(),
-          GENERIC_WRITE,
+          op == Operation::Save ? GENERIC_READ : GENERIC_WRITE,
           FILE_SHARE_READ | FILE_SHARE_WRITE,
           nullptr,
           OPEN_EXISTING,
@@ -330,7 +343,7 @@ void MainDialog::StartOperation()
         {
           auto can_continue = true;
 
-          if(file_handle != INVALID_HANDLE_VALUE)
+          if(file_handle != INVALID_HANDLE_VALUE && op != Operation::Save)
           {
             auto write_size = file::GetSize(file_handle);
             if (write_size > disk->size_in_bytes)
@@ -434,6 +447,7 @@ void MainDialog::LocalizeStrings()
   LOCALIZE(WARRANTY_CHECK);
   LOCALIZE(REFRESH);
   LOCALIZE(OPERATION_RAW);
+  LOCALIZE(OPERATION_SAVE);
   LOCALIZE(OPERATION_TRASH);
   LOCALIZE(BROWSE);
 
@@ -478,9 +492,10 @@ INT_PTR MainDialog::DlgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
         UpdateDisks();
         return TRUE;
       case IDC_BROWSE:
-        SaveDialog(_handle, GetCtl(IDC_FILE));
+        OpenSaveDialog(_handle, GetCtl(IDC_FILE), Button_GetCheck(GetCtl(IDC_OPERATION_SAVE)));
         return TRUE;
       case IDC_OPERATION_RAW:
+      case IDC_OPERATION_SAVE:
         Button_Enable(GetCtl(IDC_BROWSE), TRUE);
         Edit_Enable(GetCtl(IDC_FILE), TRUE);
         return TRUE;

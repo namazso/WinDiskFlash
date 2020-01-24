@@ -42,6 +42,9 @@ void WorkerThread::Thread()
   case Operation::Flash:
     status = DoFlash();
     break;
+  case Operation::Save:
+    status = DoSave();
+    break;
   // should never happen since operation is sanitized by main dialog
   // regardless, we need to make the compiler shut up
   default:
@@ -126,6 +129,30 @@ DWORD WorkerThread::DoFlash(uint64_t off)
       return GetLastError();
     if(SECTOR_SIZE != file::WriteAtOffset(disk, off + size_aligned, buf.get(), SECTOR_SIZE))
       return GetLastError();
+  }
+  return ERROR_SUCCESS;
+}
+
+DWORD WorkerThread::DoSave()
+{
+  constexpr auto step = 16 << 20; // 16 MB at a time
+  static_assert(step > SECTOR_SIZE);
+  static_assert(step % SECTOR_SIZE == 0);
+  // make it page aligned
+  using storage = std::aligned_storage_t<step, 0x1000>;
+  const auto buf = std::make_unique<storage>();
+
+  const auto size = disk_size_in_bytes;
+
+  for (uint64_t i = 0; i < size; i += step)
+  {
+    auto curr_size = size - i;
+    if (curr_size > step)
+      curr_size = step;
+    if (curr_size != file::Copy(file, i, disk, i, buf.get(), (size_t)curr_size))
+      return GetLastError();
+    if (NotifyProgress(double(i + curr_size) / double(size)))
+      return ERROR_CANCELLED;
   }
   return ERROR_SUCCESS;
 }

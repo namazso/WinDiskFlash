@@ -32,6 +32,7 @@ private:
 
   DWORD DoTrash();
   DWORD DoFlash(uint64_t off = 0);
+  DWORD DoSave();
 
   LRESULT MagicMessage(UINT uMsg, LPARAM lParam);
 

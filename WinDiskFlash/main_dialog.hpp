@@ -19,6 +19,7 @@
 enum class Operation
 {
   Flash,
+  Save,
   Trash
 };
 

@@ -30,6 +30,7 @@
 #define IDS_DLG_OPERATION_TRASH         122
 #define IDS_DLG_BROWSE                  123
 #define IDS_CLOSE                       124
+#define IDS_DLG_OPERATION_SAVE          125
 #define IDD_LICENSE_DIALOG              129
 #define RESTYPE_BLOB                    256
 #define IDC_LICENSE_BTN                 1000
@@ -42,6 +43,7 @@
 #define IDC_OPERATION_TRASH             1008
 #define IDC_FILE                        1009
 #define IDC_BROWSE                      1010
+#define IDC_OPERATION_SAVE              1011
 #define IDC_PROGRESS                    1012
 #define IDC_STARTSTOP                   1013
 #define IDC_0_LICENSE                   1015

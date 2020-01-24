@@ -2,18 +2,18 @@
 
 ## About
 
-WinDiskFlash is a tool for easily flashing raw disk images (aka `dd` images) onto storage devices under Windows.
+WinDiskFlash is a tool for easily flashing or creating raw disk images (aka `dd` images) under Windows.
 
 ## Features
 
 * Easy usage
+* Read disks into images or flash images to disks.
 * Safety - ensures correct target device - unlike other tools
 * Boot sector / partition table eraser
 * Works on Windows XP+ out of the box
 
 ## Todo
 
-* Option to backup disk to image
 * Make an icon
 
 ## Download
