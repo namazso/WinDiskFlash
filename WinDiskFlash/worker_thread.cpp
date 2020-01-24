@@ -105,9 +105,9 @@ DWORD WorkerThread::DoFlash(uint64_t off)
   const auto buf = std::make_unique<storage>();
 
   const auto size = file::GetSize(file);
-  const auto size_aligned = size & ~(uint64_t)(SECTOR_SIZE - 1);
-  if (!size_aligned || size_aligned == (uint64_t)-1)
+  if (!size || size == (uint64_t)-1)
     return GetLastError();
+  const auto size_aligned = size & ~(uint64_t)(SECTOR_SIZE - 1);
 
   for(uint64_t i = 0; i < size_aligned; i += step)
   {
