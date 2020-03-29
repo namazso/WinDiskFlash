@@ -51,6 +51,8 @@ Look into WinDiskFlash/WinDiskFlash.rc, strings in the STRINGTABLE record are ne
 
 ### Translation contributors
 
+**(@bkdwt)[https://github.com/bkdwt]** (*Portuguese (Brazilian)*)
+
 ## License
 
 All files are licensed under the following license, unless explicitly stated otherwise in the file:
